@@ -217,3 +217,7 @@ done
 echo
 echo "Total test $TEST_COUNT"
 echo "Errors     $TEST_ERROR"
+
+if [ $TEST_ERROR -ne 0 ]; then
+    exit 1
+fi

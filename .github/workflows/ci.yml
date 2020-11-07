@@ -8,30 +8,30 @@ on:
       - master
       - darktable-**
     paths-ignore:
-        - "po/**"
-        - "packaging/**"
-        - "data/latex/**"
-        - "data/lua/**"
-        - "data/pixmaps/**"
-        - "data/pswp/**"
-        - "data/style/**"
-        - "data/themes/**"
-        - "data/watermarks/**"
-        - "**.md"
+      - "po/**"
+      - "packaging/**"
+      - "data/latex/**"
+      - "data/lua/**"
+      - "data/pixmaps/**"
+      - "data/pswp/**"
+      - "data/style/**"
+      - "data/themes/**"
+      - "data/watermarks/**"
+      - "**.md"
   pull_request:
     branches: 
       - master
     paths-ignore:
-        - "po/**"
-        - "packaging/**"
-        - "data/latex/**"
-        - "data/lua/**"
-        - "data/pixmaps/**"
-        - "data/pswp/**"
-        - "data/style/**"
-        - "data/themes/**"
-        - "data/watermarks/**"
-        - "**.md"
+      - "po/**"
+      - "packaging/**"
+      - "data/latex/**"
+      - "data/lua/**"
+      - "data/pixmaps/**"
+      - "data/pswp/**"
+      - "data/style/**"
+      - "data/themes/**"
+      - "data/watermarks/**"
+      - "**.md"
 
 jobs:
 
@@ -161,12 +161,12 @@ jobs:
                  --conf plugins/lighttable/export/force_lcms2=FALSE \
                  --conf plugins/lighttable/export/iccintent=0
       - name: Run Integration test suite
-        #if: ${{ matrix.target != 'usermanual' }}
+        if: ${{ matrix.target != 'usermanual' }}
         #integration test can get "stuck" plus there are couple of errors here, so it needs to be addressed first
-        if: ${{ false }}
+        #if: ${{ false }}
         run: |
           cd "${SRC_DIR}/src/tests/integration/"
-          ./run.sh --no-opencl --no-deltae --fast-fail
+          ./run.sh --no-opencl --no-deltae --fast-fail 0035-multiple-modules
 
   Win64:
     name: Win64.${{ matrix.compiler.compiler }}.${{ matrix.target }}.${{ matrix.btype }}
@@ -315,6 +315,7 @@ jobs:
       CMAKE_BUILD_TYPE: ${{ matrix.btype }}
       GENERATOR: Ninja
       TARGET: ${{ matrix.target }}
+      DARKTABLE_CLI: ${{ github.workspace }}/install/bin/darktable-cli
     steps:
       - uses: actions/checkout@v2
         with:
@@ -345,3 +346,9 @@ jobs:
                  --conf worker_threads=4 -t 4 \
                  --conf plugins/lighttable/export/force_lcms2=FALSE \
                  --conf plugins/lighttable/export/iccintent=0
+      - name: Run Integration test suite
+        if: ${{ matrix.target != 'usermanual' }}
+        #integration test can get "stuck" plus there are couple of errors here, so it needs to be addressed first
+        run: |
+          cd "${SRC_DIR}/src/tests/integration/"
+          ./run.sh --no-opencl --no-deltae --fast-fail 0035-multiple-modules

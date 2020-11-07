@@ -143,10 +143,12 @@ jobs:
   Win64:
     name: Win64.${{ matrix.compiler.compiler }}.${{ matrix.target }}.${{ matrix.btype }}
     needs: Linux
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
+        os: 
+          - windows-latest
         btype:
           - RelWithDebInfo
         compiler:
@@ -157,11 +159,18 @@ jobs:
           - nofeatures
         include:
           # Uncomment if PR needs to generate windows package for testing.
-          - btype: Release
+          - os: windows-latest
+            btype: Release
             compiler: { compiler: LLVM,  CC: clang,   CXX: clang++ }
             eco: -DBINARY_PACKAGE_BUILD=ON
             target: skiptest
-          - btype: Debug
+          - os: windows-2016
+            btype: Release
+            compiler: { compiler: LLVM,  CC: clang,   CXX: clang++ }
+            eco: -DBINARY_PACKAGE_BUILD=ON
+            target: skiptest
+          - os: windows-latest
+            btype: Debug
             compiler: { compiler: GNU,  CC: gcc,   CXX: g++ }
             target: skiptest
     defaults:
@@ -261,7 +270,7 @@ jobs:
         if: ${{ success() && matrix.btype == 'Release' && matrix.target == 'skiptest' }}
         uses: 'actions/upload-artifact@v2'
         with:
-          name: Win64.${{ matrix.compiler.compiler }}.${{ matrix.btype}}.${{ github.sha }}
+          name: Win64.${{ matrix.os }}.${{ matrix.compiler.compiler }}.${{ matrix.btype}}.${{ github.sha }}
           path: ${{ env.BUILD_DIR }}/darktable-*.exe
           retention-days: 1
 

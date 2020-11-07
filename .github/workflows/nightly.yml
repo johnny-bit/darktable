@@ -9,11 +9,15 @@ jobs:
   Win64:
     if: github.repository == 'darktable-org/darktable' || github.event_name == 'workflow_dispatch'
     name: Nightly darktable.${{ github.sha }}.win64
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
-        btype: [Release]
+        os: 
+          - windows-latest
+          - windows-2016
+        btype: 
+          - Release
         compiler: 
           - { compiler: LLVM,  CC: clang,   CXX: clang++ }
         eco: [-DBINARY_PACKAGE_BUILD=ON]
@@ -113,6 +117,6 @@ jobs:
         if: ${{ success() && matrix.btype == 'Release' && matrix.target == 'skiptest' }}
         uses: 'actions/upload-artifact@v2'
         with:
-          name: darktable.${{ github.sha }}.win64.zip
+          name: darktable.${{ github.sha }}.win64.${{ mastrix.os }}.zip
           path: ${{ env.BUILD_DIR }}/darktable-*.exe
           retention-days: 2
