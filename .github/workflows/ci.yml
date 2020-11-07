@@ -167,6 +167,13 @@ jobs:
         run: |
           cd "${SRC_DIR}/src/tests/integration/"
           ./run.sh --no-opencl --no-deltae --fast-fail 0035-multiple-modules
+      - name: Visual inspection of failed integration test
+        if: ${{ failure() && matrix.target != 'usermanual' }}
+        uses: 'actions/upload-artifact@v2'
+        with:
+          name: ITFAIL.${{ matrix.os.code }}.${{ matrix.compiler.compiler }}.${{ matrix.target }}.${{ matrix.btype}}
+          path: ${{ env.SRC_DIR }}/src/tests/integration/0035-multiple-modules/*.png
+          retention-days: 1
 
   Win64:
     name: Win64.${{ matrix.compiler.compiler }}.${{ matrix.target }}.${{ matrix.btype }}
