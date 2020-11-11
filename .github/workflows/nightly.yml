@@ -117,6 +117,6 @@ jobs:
         if: ${{ success() && matrix.btype == 'Release' && matrix.target == 'skiptest' }}
         uses: 'actions/upload-artifact@v2'
         with:
-          name: darktable.${{ github.sha }}.win64.${{ mastrix.os }}.zip
+          name: darktable.${{ github.sha }}.win64.${{ matrix.os }}.zip
           path: ${{ env.BUILD_DIR }}/darktable-*.exe
           retention-days: 2
