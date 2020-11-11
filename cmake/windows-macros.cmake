@@ -142,6 +142,12 @@ if (WIN32 AND NOT BUILD_MSYS2_INSTALL)
   install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT DTApplication)
 
   # TODO: Add auxiliary files for openssl?
+  file(GLOB TMP_SYSTEM_RUNTIME_LIBS
+    #LIBOPENSSL
+    ${MINGW_PATH}/libcrypto*.dll
+    ${MINGW_PATH}/libssl*.dll
+  )
+  list(APPEND CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${TMP_SYSTEM_RUNTIME_LIBS})
 
   # Add pixbuf loader libraries
   # FILE(GLOB_RECURSE GDK_PIXBUF "${MINGW_PATH}/../lib/gdk-pixbuf-2.0/2.10.0/loaders/*.dll"  )
