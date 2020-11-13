@@ -84,6 +84,8 @@ jobs:
             mingw-w64-x86_64-python3-setuptools
             mingw-w64-x86_64-gmic
             mingw-w64-x86_64-nsis
+            mingw-w64-x86_64-openssl
+            mingw-w64-x86_64-curl
           update: true
       - uses: actions/checkout@v2
         with:
