@@ -94,6 +94,12 @@ jobs:
       - name: Update lensfun
         run: |
           lensfun-update-data
+      - name: inspect mingw
+        run: | 
+          echo "${MINGW_PATH}""
+      - name: instpect mingw-w64-x86_64-openssl
+        run: |
+          pacman -Ql mingw-w64-x86_64-openssl
       - name: Build and Install
         run: |
           cmake -E make_directory "${BUILD_DIR}"
