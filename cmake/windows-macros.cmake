@@ -99,6 +99,10 @@ if (WIN32 AND NOT BUILD_MSYS2_INSTALL)
   #LIBOPENSSL
     ${MINGW_PATH}/libcrypto*.dll
     ${MINGW_PATH}/libssl*.dll
+    /mingw64/bin/libcrypto-1_1-x64.dll
+    /mingw64/bin/libssl-1_1-x64.dll
+  #everything please
+  ${MINGW_PATH}/*.dll
     )
 
   if(OpenEXR_FOUND)
