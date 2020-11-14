@@ -79,9 +79,10 @@ jobs:
     steps:
       - name: Install compiler ${{ matrix.compiler.compiler }}
         run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo add-apt-repository -y universe
           sudo add-apt-repository -y multiverse
+          sudo add-apt-repository -y llvm-toolchain-11
           sudo apt-get update
           sudo apt-get -y install \
             ${{ matrix.compiler.packages }}
@@ -165,7 +166,7 @@ jobs:
         #if: ${{ false }}
         run: |
           cd "${SRC_DIR}/src/tests/integration/"
-          ./run.sh --no-opencl --no-deltae --fast-fail 0035-multiple-modules
+          #./run.sh --no-opencl --no-deltae --fast-fail 0035-multiple-modules
       - name: Visual inspection of failed integration test
         if: ${{ failure() && matrix.target != 'usermanual' }}
         uses: 'actions/upload-artifact@v2'
