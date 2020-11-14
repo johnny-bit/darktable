@@ -96,7 +96,7 @@ jobs:
           lensfun-update-data
       - name: inspect mingw
         run: | 
-          echo "${MINGW_PATH}""
+          echo "${MINGW_PATH}"
       - name: instpect mingw-w64-x86_64-openssl
         run: |
           pacman -Ql mingw-w64-x86_64-openssl
