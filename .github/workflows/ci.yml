@@ -58,14 +58,14 @@ jobs:
           #- build
           - nofeatures
         include:
-          - os: { label: ubuntu-latest, code: latest }
-            btype: Debug
-            compiler: { compiler: GNU9,   CC: gcc-9,    CXX: g++-9,      packages: gcc-9 g++-9 }
-            target: skiptest
           - os: { label: ubuntu-18.04, code: bionic }
-            btype: Release
-            compiler: { compiler: GNU9,   CC: gcc-9,    CXX: g++-9,      packages: gcc-9 g++-9 default-jdk-headless default-jre-headless docbook docbook-xml docbook-xsl docbook-xsl-saxon fop gnome-doc-utils imagemagick libsaxon-java xsltproc }
-            target: usermanual
+            btype: RelWithDebInfo
+            compiler: { compiler: GNU7,   CC: gcc-7,    CXX: g++-7,      packages: gcc-7 g++-7 }
+            target: nofeatures
+          - os: { label: ubuntu-18.04, code: bionic }
+            btype: RelWithDebInfo
+            compiler: { compiler: LLVM6,  CC: clang-6,  CXX: clang++-6,  packages: clang-6 libomp-6-dev libclang-common-6-dev llvm-6-dev clang++-6 libc++-6-dev lld-6}
+            target: nofeatures
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
@@ -214,6 +214,15 @@ jobs:
             btype: RelWithDebInfo
             compiler: { compiler: LLVM10, CC: clang-10, CXX: clang++-10, packages: clang-10 libomp-10-dev libclang-common-10-dev llvm-10-dev clang++-10 libc++-10-dev lld-10}
             target: nofeatures
+        include:
+          - os: { label: ubuntu-latest, code: latest }
+            btype: Debug
+            compiler: { compiler: GNU9,   CC: gcc-9,    CXX: g++-9,      packages: gcc-9 g++-9 }
+            target: skiptest
+          - os: { label: ubuntu-18.04, code: bionic }
+            btype: Release
+            compiler: { compiler: GNU9,   CC: gcc-9,    CXX: g++-9,      packages: gcc-9 g++-9 default-jdk-headless default-jre-headless docbook docbook-xml docbook-xsl docbook-xsl-saxon fop gnome-doc-utils imagemagick libsaxon-java xsltproc }
+            target: usermanual
     env:
       CC: ${{ matrix.compiler.CC }}
       CXX: ${{ matrix.compiler.CXX }}
@@ -502,9 +511,4 @@ jobs:
                  --conf worker_threads=4 -t 4 \
                  --conf plugins/lighttable/export/force_lcms2=FALSE \
                  --conf plugins/lighttable/export/iccintent=0
-      - name: Run Integration test suite
-        if: ${{ matrix.target != 'usermanual' }}
-        #integration test can get "stuck" plus there are couple of errors here, so it needs to be addressed first
-        run: |
-          cd "${SRC_DIR}/src/tests/integration/"
-          ./run.sh --no-opencl --no-deltae --fast-fail 0035-multiple-modules
+
