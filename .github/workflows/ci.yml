@@ -64,7 +64,7 @@ jobs:
             target: nofeatures
           - os: { label: ubuntu-18.04, code: bionic }
             btype: RelWithDebInfo
-            compiler: { compiler: LLVM6,  CC: clang-6,  CXX: clang++-6,  packages: clang-6.0 libomp-dev libclang-common-6.0-dev llvm-6.0-dev clang++-6.0 libc++-dev lld-6.0}
+            compiler: { compiler: LLVM6,  CC: clang-6,  CXX: clang++-6,  packages: clang-6.0 libclang-common-6.0-dev llvm-6.0-dev clang++-6.0 libc++-dev lld-6.0 libomp5 libomp-dev}
             target: nofeatures
     env:
       CC: ${{ matrix.compiler.CC }}
