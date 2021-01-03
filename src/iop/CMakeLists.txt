@@ -27,7 +27,7 @@ macro (add_iop _lib _src)
     OUTPUT ${_output}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tools/introspection/
     # COMMAND ${perl_BIN} ${CMAKE_SOURCE_DIR}/tools/introspection/parser.pl ${CMAKE_CURRENT_SOURCE_DIR}/../ ${_input} ${_output}
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/introspection/parser.pl ${CMAKE_CURRENT_SOURCE_DIR}/../ ${_input} ${_output}
+    COMMAND sh -c "${CMAKE_SOURCE_DIR}/tools/introspection/parser.pl ${CMAKE_CURRENT_SOURCE_DIR}/../ ${_input} ${_output}"
   )
 
   # do not want compiler to look for "DEFAULT_VISIBLE"
