@@ -424,7 +424,10 @@ jobs:
           $(cygpath ${SRC_DIR})/.ci/ci-script.sh
       - name: Check if it runs
         run: |
+          ls -l $(cygpath ${INSTALL_PREFIX})/bin/
           $(cygpath ${INSTALL_PREFIX})/bin/darktable.exe --version || true
+          $(cygpath ${INSTALL_PREFIX})/bin/darktable-cli.exe --version || true
+          echo "Testing RUN!"
           $(cygpath ${INSTALL_PREFIX})/bin/darktable-cli.exe \
                  --width 2048 --height 2048 \
                  --hq true --apply-custom-presets false \
