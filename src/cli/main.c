@@ -765,6 +765,7 @@ int main(int argc, char *arg[])
     dt_export_metadata_t metadata;
     metadata.flags = dt_lib_export_metadata_default_flags();
     metadata.list = NULL;
+    dt_print(DT_DEBUG_IMAGEIO, "metadata set to default flags...\n");
     storage->store(storage, sdata, id, format, fdata, num, total, high_quality, upscale, export_masks,
                    icc_type, icc_filename, icc_intent, &metadata);
   }
