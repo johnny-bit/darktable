@@ -326,10 +326,14 @@ void dt_image_full_path(const int32_t imgid, char *pathname, size_t pathname_len
     dt_print(DT_DEBUG_IMAGEIO, "[dt_image_full_path] _image_local_copy_full_path returned\n");
 
     if (g_file_test(lc_pathname, G_FILE_TEST_EXISTS))
+    {
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_image_full_path] %s exists! this IS cache!\n", lc_pathname);
       g_strlcpy(pathname, (char *)lc_pathname, pathname_len);
+    }
     else
       *from_cache = FALSE;
   }
+
 }
 
 static void _image_local_copy_full_path(const int32_t imgid, char *pathname, size_t pathname_len)
@@ -2274,6 +2278,7 @@ int dt_image_local_copy_reset(const int32_t imgid)
 
 void dt_image_write_sidecar_file(const int32_t imgid)
 {
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_image_write_sidecar_file] writing sidecar for %d\n", imgid);
   // TODO: compute hash and don't write if not needed!
   // write .xmp file
   if(imgid > 0 && dt_conf_get_bool("write_sidecar_files"))
@@ -2284,21 +2289,31 @@ void dt_image_write_sidecar_file(const int32_t imgid)
     gboolean from_cache = FALSE;
     dt_image_full_path(imgid, filename, sizeof(filename), &from_cache);
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_image_write_sidecar_file] checked filename (no cache) %s\n", filename);
+
     if (!g_file_test(filename, G_FILE_TEST_EXISTS))
     {
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_image_write_sidecar_file] filename (no cache) %s doesn't exit, checking local copy\n", filename);
       // OTHERWISE: check if the local copy exists
       from_cache = TRUE;
       dt_image_full_path(imgid, filename, sizeof(filename), &from_cache);
+
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_image_write_sidecar_file] filename (cache) %s exsitence: %d\n", filename, from_cache);
 
       //  nothing to do, the original is not accessible and there is no local copy
       if (!from_cache) return;
     }
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_image_write_sidecar_file] determine file version and write xmp\n");
+
     dt_image_path_append_version(imgid, filename, sizeof(filename));
     g_strlcat(filename, ".xmp", sizeof(filename));
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_image_write_sidecar_file] writing xmp to %s\n", filename);
+
     if(!dt_exif_xmp_write(imgid, filename))
     {
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_image_write_sidecar_file] xmp written to %s\n", filename);
       // put the timestamp into db. this can't be done in exif.cc since that code gets called
       // for the copy exporter, too
       sqlite3_stmt *stmt;

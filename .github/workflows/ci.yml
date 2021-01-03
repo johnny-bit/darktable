@@ -372,22 +372,22 @@ jobs:
             git
             base-devel
             intltool
+            mingw-w64-x86_64-gdb
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-clang
+            mingw-w64-x86_64-openmp
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-cmocka
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-libxml2
+            mingw-w64-x86_64-pugixml
+            mingw-w64-x86_64-libjpeg-turbo
+            mingw-w64-x86_64-zlib
           update: true
       - name: Pacman workaround
         run: |
             pacman --noconfirm -S --needed \
-            mingw-w64-x86_64-gdb \
-            mingw-w64-x86_64-toolchain \
-            mingw-w64-x86_64-gcc \
-            mingw-w64-x86_64-clang \
-            mingw-w64-x86_64-openmp \
-            mingw-w64-x86_64-cmake \
-            mingw-w64-x86_64-cmocka \
-            mingw-w64-x86_64-ninja \
-            mingw-w64-x86_64-libxml2 \
-            mingw-w64-x86_64-pugixml \
-            mingw-w64-x86_64-libjpeg-turbo \
-            mingw-w64-x86_64-zlib \
             mingw-w64-x86_64-exiv2 \
             mingw-w64-x86_64-lcms2 \
             mingw-w64-x86_64-lensfun \
@@ -431,6 +431,7 @@ jobs:
           $(cygpath ${INSTALL_PREFIX})/bin/darktable-cli.exe --version || true
           echo "Testing RUN!"
           $(cygpath ${INSTALL_PREFIX})/bin/darktable-cli.exe \
+                 --verbose \
                  --width 2048 --height 2048 \
                  --hq true --apply-custom-presets false \
                  $(cygpath ${SRC_DIR})/src/tests/integration/images/mire1.cr2 \
