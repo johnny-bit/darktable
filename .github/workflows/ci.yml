@@ -365,16 +365,17 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
+          install: >-
+            pacman-mirrors
+            bash
+            curl
+            git
+            base-devel
+            intltool
           update: true
       - name: Pacman workaround
         run: |
             pacman --noconfirm -S --needed \
-            pacman-mirrors \
-            bash \
-            curl \
-            git \
-            base-devel \
-            intltool \
             mingw-w64-x86_64-gdb \
             mingw-w64-x86_64-toolchain \
             mingw-w64-x86_64-gcc \
