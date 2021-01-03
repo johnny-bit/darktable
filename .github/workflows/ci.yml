@@ -333,7 +333,7 @@ jobs:
           - { compiler: GNU,  CC: gcc,   CXX: g++ }
           - { compiler: LLVM, CC: clang, CXX: clang++ }
         target:
-          - skiptest
+          #- skiptest
           - nofeatures
         include:
           # Uncomment if PR needs to generate windows package for testing.
@@ -346,7 +346,7 @@ jobs:
             target: skiptest
         generator:
           - MSYS Makefiles
-          - Ninja
+          #- Ninja
     defaults:
       run:
         shell: msys2 {0}

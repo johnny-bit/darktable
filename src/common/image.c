@@ -321,7 +321,9 @@ void dt_image_full_path(const int32_t imgid, char *pathname, size_t pathname_len
   if(*from_cache)
   {
     char lc_pathname[PATH_MAX] = { 0 };
+    fprintf(stderr, "[dt_image_full_path] calling _image_local_copy_full_path\n");
     _image_local_copy_full_path(imgid, lc_pathname, sizeof(lc_pathname));
+    fprintf(stderr, "[dt_image_full_path] _image_local_copy_full_path returned\n");
 
     if (g_file_test(lc_pathname, G_FILE_TEST_EXISTS))
       g_strlcpy(pathname, (char *)lc_pathname, pathname_len);
@@ -340,13 +342,18 @@ static void _image_local_copy_full_path(const int32_t imgid, char *pathname, siz
                               "WHERE i.film_id = f.id AND i.id = ?1",
                               -1, &stmt, NULL);
   DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+  fprintf(stderr, "[_ilcfp] lesse if we've a row\n");
   if(sqlite3_step(stmt) == SQLITE_ROW)
   {
     char filename[PATH_MAX] = { 0 };
     char cachedir[PATH_MAX] = { 0 };
+    fprintf(stderr, "[_ilcfp] seems like we have a row!\n");
     g_strlcpy(filename, (char *)sqlite3_column_text(stmt, 0), pathname_len);
+    fprintf(stderr, "[_ilcfp] got filename: '%s'\n", filename);
     char *md5_filename = g_compute_checksum_for_string(G_CHECKSUM_MD5, filename, strlen(filename));
+    fprintf(stderr, "[_ilcfp] got filename md5: '%s'\n", md5_filename);
     dt_loc_get_user_cache_dir(cachedir, sizeof(cachedir));
+    fprintf(stderr, "[_ilcfp] cachedir: '%s'\n", cachedir);
 
     // and finally, add extension, needed as some part of the code is looking for the extension
     char *c = filename + strlen(filename);
@@ -355,17 +362,20 @@ static void _image_local_copy_full_path(const int32_t imgid, char *pathname, siz
     // cache filename old format: <cachedir>/img-<id>-<MD5>.<ext>
     // for upward compatibility we check for the old name, if found we return it
     snprintf(pathname, pathname_len, "%s/img-%d-%s%s", cachedir, imgid, md5_filename, c);
+    fprintf(stderr, "[_ilcfp] pathname (oldtype): '%s'\n", pathname);
 
     // if it does not exist, we return the new naming
     if(!g_file_test(pathname, G_FILE_TEST_EXISTS))
     {
       // cache filename format: <cachedir>/img-<MD5>.<ext>
       snprintf(pathname, pathname_len, "%s/img-%s%s", cachedir, md5_filename, c);
+      fprintf(stderr, "[_ilcfp] pathname (newtype): '%s'\n", pathname);
     }
 
     g_free(md5_filename);
   }
   sqlite3_finalize(stmt);
+  fprintf(stderr, "[_ilcfp] finished and cleaned up!\n");
 }
 
 void dt_image_path_append_version_no_db(int version, char *pathname, size_t pathname_len)
