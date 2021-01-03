@@ -647,11 +647,14 @@ int main(int argc, char *arg[])
     g_free(output_ext);
     output_ext = g_strdup("tiff");
   }
+  fflush(NULL);
 
   // init the export data structures
   dt_imageio_module_format_t *format;
   dt_imageio_module_storage_t *storage;
   dt_imageio_module_data_t *sdata, *fdata;
+
+  dt_print(DT_DEBUG_IMAGEIO, "Initing storage...\n");
 
   storage = dt_imageio_get_storage_by_name("disk"); // only exporting to disk makes sense
   if(storage == NULL)
@@ -664,6 +667,8 @@ int main(int argc, char *arg[])
     g_free(output_ext);
     exit(1);
   }
+
+  dt_print(DT_DEBUG_IMAGEIO, "Initing storage params...\n");
 
   sdata = storage->get_params(storage);
   if(sdata == NULL)
@@ -680,6 +685,8 @@ int main(int argc, char *arg[])
   g_strlcpy((char *)sdata, output_filename, DT_MAX_PATH_FOR_PARAMS);
   // all is good now, the last line didn't happen.
 
+  dt_print(DT_DEBUG_IMAGEIO, "Getting format for %s...\n", output_ext);
+
   format = dt_imageio_get_format_by_name(output_ext);
   if(format == NULL)
   {
@@ -690,6 +697,8 @@ int main(int argc, char *arg[])
     g_free(output_ext);
     exit(1);
   }
+
+  dt_print(DT_DEBUG_IMAGEIO, "getting format parms...\n");
 
   fdata = format->get_params(format);
   if(fdata == NULL)
@@ -723,6 +732,8 @@ int main(int argc, char *arg[])
   fdata->style[0] = '\0';
   fdata->style_append = 1; // make append the default and override with --style-overwrite
 
+  dt_print(DT_DEBUG_IMAGEIO, "Checking style...\n");
+
   if(style)
   {
     g_strlcpy((char *)fdata->style, style, DT_MAX_STYLE_NAME_LENGTH);
@@ -730,6 +741,8 @@ int main(int argc, char *arg[])
     if(style_overwrite)
       fdata->style_append = 0;
   }
+
+  dt_print(DT_DEBUG_IMAGEIO, "Fill storage initialization...\n");
 
   if(storage->initialize_store)
   {
@@ -741,10 +754,13 @@ int main(int argc, char *arg[])
 
   // TODO: add a callback to set the bpp without going through the config
 
+  dt_print(DT_DEBUG_IMAGEIO, "exporting...\n");
+
   int num = 1;
   for(GList *iter = id_list; iter; iter = g_list_next(iter), num++)
   {
     const int id = GPOINTER_TO_INT(iter->data);
+    dt_print(DT_DEBUG_IMAGEIO, "Exporting imageid %d...\n", id);
     // TODO: have a parameter in command line to get the export presets
     dt_export_metadata_t metadata;
     metadata.flags = dt_lib_export_metadata_default_flags();
@@ -752,6 +768,8 @@ int main(int argc, char *arg[])
     storage->store(storage, sdata, id, format, fdata, num, total, high_quality, upscale, export_masks,
                    icc_type, icc_filename, icc_intent, &metadata);
   }
+
+  dt_print(DT_DEBUG_IMAGEIO, "Cleaning up...\n");
 
   // cleanup time
   if(storage->finalize_store) storage->finalize_store(storage, sdata);
