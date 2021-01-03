@@ -37,6 +37,7 @@ jobs:
 
   Linux-minimal:
     name: Linux-minimal.${{ matrix.os.code }}.${{ matrix.compiler.compiler }}.${{ matrix.target }}.${{ matrix.btype }}
+    if: false
     runs-on: ${{ matrix.os.label }}
     strategy:
       fail-fast: true
@@ -321,7 +322,7 @@ jobs:
 
   Win64:
     name: Win64.${{ matrix.compiler.compiler }}.${{ matrix.target }}.${{ matrix.btype }}.${{ matrix.generator }}
-    needs: Linux-minimal
+    # needs: Linux-minimal
     runs-on: windows-latest
     strategy:
       fail-fast: true
@@ -437,7 +438,8 @@ jobs:
                  --core --disable-opencl --conf host_memory_limit=8192 \
                  --conf worker_threads=4 -t 4 \
                  --conf plugins/lighttable/export/force_lcms2=FALSE \
-                 --conf plugins/lighttable/export/iccintent=0
+                 --conf plugins/lighttable/export/iccintent=0 \
+                 -d all;
       - name: Package
         if: ${{ success() && matrix.btype == 'Release' && matrix.target == 'skiptest' }}
         run: |
