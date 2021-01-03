@@ -367,7 +367,7 @@ jobs:
           update: true
       - name: Pacman workaround
         run: |
-            pacman --noconfirm -s --needed \
+            pacman --noconfirm -S --needed \
             pacman-mirrors \
             bash \
             curl \
