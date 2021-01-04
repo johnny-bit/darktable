@@ -234,19 +234,28 @@ int store(dt_imageio_module_storage_t *self, dt_imageio_module_data_t *sdata, co
 {
   dt_imageio_disk_t *d = (dt_imageio_disk_t *)sdata;
 
+  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] starting store procdedure...\n");
+
   char filename[PATH_MAX] = { 0 };
   char input_dir[PATH_MAX] = { 0 };
   char pattern[DT_MAX_PATH_FOR_PARAMS];
   g_strlcpy(pattern, d->filename, sizeof(pattern));
+
+  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] got pattern %s...\n", pattern);
+
   gboolean from_cache = FALSE;
   dt_image_full_path(imgid, input_dir, sizeof(input_dir), &from_cache);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] got input %s...\n", input);
   // set max_width and max_height values to expand them afterwards in darktable variables
   dt_variables_set_max_width_height(d->vp, fdata->max_width, fdata->max_height);
+  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] d->vp set with max width %d/height %d ...\n", fdata->max_width, fdata->max_height);
   int fail = 0;
   // we're potentially called in parallel. have sequence number synchronized:
   dt_pthread_mutex_lock(&darktable.plugin_threadsafe);
   {
 try_again:
+    dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] exporting in mutex locked area...\n");
     // avoid braindead export which is bound to overwrite at random:
     if(total > 1 && !g_strrstr(pattern, "$"))
     {
@@ -257,6 +266,8 @@ try_again:
     g_strlcpy(pattern, fixed_path, sizeof(pattern));
     g_free(fixed_path);
 
+    dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] dest path fixed to %s...\n", pattern);
+
     d->vp->filename = input_dir;
     d->vp->jobcode = "export";
     d->vp->imgid = imgid;
@@ -265,6 +276,8 @@ try_again:
     gchar *result_filename = dt_variables_expand(d->vp, pattern, TRUE);
     g_strlcpy(filename, result_filename, sizeof(filename));
     g_free(result_filename);
+
+    dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] variables in name expanded to %s...\n", filename);
 
     // if filenamepattern is a directory just add ${FILE_NAME} as default..
     // this can happen if the filename component of the pattern is an empty variable
@@ -278,6 +291,8 @@ try_again:
     }
 
     char *output_dir = g_path_get_dirname(filename);
+
+    dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] output dir set to %s...\n", output_dir);
 
     if(g_mkdir_with_parents(output_dir, 0755))
     {
@@ -299,6 +314,8 @@ try_again:
     size_t filename_free_space = sizeof(filename) - (c - filename);
     snprintf(c, filename_free_space, ".%s", ext);
 
+    dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] c set to %s...\n", c);
+
   /* prevent overwrite of files */
   failed:
     g_free(output_dir);
@@ -311,6 +328,8 @@ try_again:
         snprintf(c, filename_free_space, "_%.2d.%s", seq, ext);
         seq++;
       }
+
+      dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] unique filename extended to %s...\n", c);
     }
 
     if(!fail && d->onsave_action == DT_EXPORT_ONCONFLICT_SKIP)
@@ -323,10 +342,14 @@ try_again:
                        num, total, filename);
         return 0;
       }
+      dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] no need to skip job, filename is unique...\n");
     }
   } // end of critical block
   dt_pthread_mutex_unlock(&darktable.plugin_threadsafe);
+  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] leaved mutex locked area...\n");
   if(fail) return 1;
+
+  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] starting actual export procdedure...\n");
 
   /* export image to file */
   if(dt_imageio_export(imgid, filename, format, fdata, high_quality, upscale, TRUE, export_masks, icc_type,
