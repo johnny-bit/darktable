@@ -246,7 +246,7 @@ int store(dt_imageio_module_storage_t *self, dt_imageio_module_data_t *sdata, co
   gboolean from_cache = FALSE;
   dt_image_full_path(imgid, input_dir, sizeof(input_dir), &from_cache);
 
-  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] got input %s...\n", input);
+  dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] got input %s...\n", input_dir);
   // set max_width and max_height values to expand them afterwards in darktable variables
   dt_variables_set_max_width_height(d->vp, fdata->max_width, fdata->max_height);
   dt_print(DT_DEBUG_IMAGEIO, "[disk_storage_store] d->vp set with max width %d/height %d ...\n", fdata->max_width, fdata->max_height);
