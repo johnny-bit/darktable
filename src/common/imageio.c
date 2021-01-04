@@ -657,9 +657,15 @@ int dt_imageio_export_with_flags(const int32_t imgid, const char *filename,
                                  dt_imageio_module_data_t *storage_params, int num, int total,
                                  dt_export_metadata_t *metadata)
 {
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] starting export procdedure...\n");
   dt_develop_t dev;
   dt_dev_init(&dev, 0);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] dev inited...\n");
+
   dt_dev_load_image(&dev, imgid);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] image loaded...\n");
 
   const gboolean buf_is_downscaled = (thumbnail_export && dt_conf_get_bool("ui/performance"));
   dt_mipmap_buffer_t buf;
@@ -667,6 +673,7 @@ int dt_imageio_export_with_flags(const int32_t imgid, const char *filename,
     dt_mipmap_cache_get(darktable.mipmap_cache, &buf, imgid, DT_MIPMAP_F, DT_MIPMAP_BLOCKING, 'r');
   else
     dt_mipmap_cache_get(darktable.mipmap_cache, &buf, imgid, DT_MIPMAP_FULL, DT_MIPMAP_BLOCKING, 'r');
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] got mipmap cache...\n");
 
   const dt_image_t *img = &dev.image_storage;
 
@@ -682,6 +689,7 @@ int dt_imageio_export_with_flags(const int32_t imgid, const char *filename,
 
 
   int res = 0;
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] starting performance counters for export...\n");
 
   dt_times_t start;
   dt_get_times(&start);
@@ -695,6 +703,8 @@ int dt_imageio_export_with_flags(const int32_t imgid, const char *filename,
         thumbnail_export ? C_("noun", "thumbnail export") : C_("noun", "export"));
     goto error;
   }
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] pipe inited for export...\n");
+
 
   //  If a style is to be applied during export, add the iop params into the history
   if(!thumbnail_export && format_params->style[0] != '\0')
@@ -725,12 +735,24 @@ int dt_imageio_export_with_flags(const int32_t imgid, const char *filename,
     g_list_free_full(style_items, dt_style_item_free);
   }
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] styles loaded...\n");
+
   dt_ioppr_resync_modules_order(&dev);
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] module order resynced...\n");
+
+
   dt_dev_pixelpipe_set_icc(&pipe, icc_type, icc_filename, icc_intent);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] icc set...\n");
+
   dt_dev_pixelpipe_set_input(&pipe, &dev, (float *)buf.buf, buf.width, buf.height, buf.iscale);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] pixelpipe input set...\n");
+
   dt_dev_pixelpipe_create_nodes(&pipe, &dev);
   dt_dev_pixelpipe_synch_all(&pipe, &dev);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_export_with_flags] pixelpipe synced...\n");
+
 
   if(filter)
   {
