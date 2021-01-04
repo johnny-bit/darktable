@@ -689,7 +689,9 @@ void dt_mipmap_cache_get_with_caller(
     const char *file,
     int line)
 {
+  dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] helo...\n");
   const uint32_t key = get_key(imgid, mip);
+  dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] cache key: %d...\n", key);
   if(flags == DT_MIPMAP_TESTLOCK)
   {
     // simple case: only get and lock if it's there.
@@ -743,10 +745,15 @@ void dt_mipmap_cache_get_with_caller(
   }
   else if(flags == DT_MIPMAP_BLOCKING)
   {
+    dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] doing blocking get...\n");
     // simple case: blocking get
     dt_cache_entry_t *entry =  dt_cache_get_with_caller(&_get_cache(cache, mip)->cache, key, mode, file, line);
 
+    dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] got cache entry, unpoisoning memory region...\n");
+
     ASAN_UNPOISON_MEMORY_REGION(entry->data, dt_mipmap_buffer_dsc_size);
+
+    dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] unpoisoned mem region...\n");
 
     struct dt_mipmap_buffer_dsc *dsc = (struct dt_mipmap_buffer_dsc *)entry->data;
     buf->cache_entry = entry;
