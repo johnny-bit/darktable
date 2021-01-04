@@ -649,17 +649,26 @@ static inline void _dt_dev_load_pipeline_defaults(dt_develop_t *dev)
 // load the raw and get the new image struct, blocking in gui thread
 static inline void _dt_dev_load_raw(dt_develop_t *dev, const uint32_t imgid)
 {
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] hello...\n");
   // first load the raw, to make sure dt_image_t will contain all and correct data.
   dt_mipmap_buffer_t buf;
   dt_times_t start;
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] setting up time counters...\n");
   dt_get_times(&start);
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] pre mipmap_cache_get...\n");
   dt_mipmap_cache_get(darktable.mipmap_cache, &buf, imgid, DT_MIPMAP_FULL, DT_MIPMAP_BLOCKING, 'r');
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] pre dt_mipmap_cache_release...\n");
   dt_mipmap_cache_release(darktable.mipmap_cache, &buf);
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] showing time counters...\n");
   dt_show_times_f(&start, "[dev]", "to load the image.");
 
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] pre dt_image_cache_get...\n");
   const dt_image_t *image = dt_image_cache_get(darktable.image_cache, imgid, 'r');
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] image gotten...\n");
   dev->image_storage = *image;
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] pre dt_image_cache_read_release...\n");
   dt_image_cache_read_release(darktable.image_cache, image);
+  dt_print(DT_DEBUG_IMAGEIO, "[_dt_dev_load_raw] done!\n");
 }
 
 void dt_dev_reload_image(dt_develop_t *dev, const uint32_t imgid)
