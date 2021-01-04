@@ -705,9 +705,13 @@ float dt_dev_get_zoom_scale(dt_develop_t *dev, dt_dev_zoom_t zoom, int closeup_f
 
 void dt_dev_load_image(dt_develop_t *dev, const uint32_t imgid)
 {
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] locking image...\n");
   dt_lock_image(imgid);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] locked.\n");
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] loading raw...\n");
   _dt_dev_load_raw(dev, imgid);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] raw lodaded\n");
 
   if(dev->pipe)
   {
@@ -719,18 +723,27 @@ void dt_dev_load_image(dt_develop_t *dev, const uint32_t imgid)
   dev->image_status = dev->preview_status = dev->preview2_status = DT_DEV_PIXELPIPE_DIRTY;
 
   // we need a global lock as the dev->iop set must not be changed until read history is terminated
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] entering mutex locked area...\n");
   dt_pthread_mutex_lock(&darktable.dev_threadsafe);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] loading modules...\n");
   dev->iop = dt_iop_load_modules(dev);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] modules loaded.\n");
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] reading histroy...\n");
   dt_dev_read_history(dev);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] history read.\n");
   dt_pthread_mutex_unlock(&darktable.dev_threadsafe);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] left mutex locked area.\n");
 
   dev->first_load = FALSE;
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] removing compress problem...\n");
   // Loading an image means we do some developing and so remove the darktable|problem|history-compress tag
   dt_history_set_compress_problem(imgid, FALSE);
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] unlocking image...\n");
   dt_unlock_image(imgid);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_dev_load_image] finished.\n");
 }
 
 void dt_dev_configure(dt_develop_t *dev, int wd, int ht)
