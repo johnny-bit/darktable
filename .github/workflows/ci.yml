@@ -446,7 +446,7 @@ jobs:
             -isystem /D/a/_temp/msys/msys64/mingw64/include/json-glib-1.0 -isystem /D/a/_temp/msys/msys64/mingw64/include/osmgpsmap-1.0 \
             -Wall -Wno-format -Wshadow -Wtype-limits -Wvla -Wthread-safety -Wno-unknown-pragmas -Wno-error=varargs -Wno-error=address-of-packed-member \
             -std=c++14 -std=c++11 -march=native -msse2 -g -O2 -g -DNDEBUG -O2   -DUNICODE -D_UNICODE -Werror -Wfatal-errors -Wno-error=pass-failed \
-            -S -emit-llvm -o $(cygpath ${SRC_DIR})/.ci/imageio_rawspeed.ll -Xclang -disable-llvm-optzns
+            -S -emit-llvm -o $(cygpath ${SRC_DIR})/.ci/imageio_rawspeed.ll -Xclang -disable-llvm-optzns \
             -std=c++14 -c /D/a/darktable/darktable/src/src/common/imageio_rawspeed.cc
       - name: Upload raport
         uses: 'actions/upload-artifact@v2'
