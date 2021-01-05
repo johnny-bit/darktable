@@ -761,6 +761,7 @@ void dt_mipmap_cache_get_with_caller(
     int mipmap_generated = 0;
     if(dsc->flags & DT_MIPMAP_BUFFER_DSC_FLAG_GENERATE)
     {
+      dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] mipmap needs  to be generated...\n");
       mipmap_generated = 1;
 
       __sync_fetch_and_add(&(_get_cache(cache, mip)->stats_fetches), 1);
@@ -769,18 +770,23 @@ void dt_mipmap_cache_get_with_caller(
       // now fill it with data:
       if(mip == DT_MIPMAP_FULL)
       {
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] generating mipmap for dt_mipmap_full...\n");
         // load the image:
         // make sure we access the r/w lock as shortly as possible!
         dt_image_t buffered_image;
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] calling dt_image_cache_get...\n");
         const dt_image_t *cimg = dt_image_cache_get(darktable.image_cache, imgid, 'r');
         buffered_image = *cimg;
         // dt_image_t *img = dt_image_cache_write_get(darktable.image_cache, cimg);
         // dt_image_cache_write_release(darktable.image_cache, img, DT_IMAGE_CACHE_RELAXED);
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] releasing cache read lock...\n");
         dt_image_cache_read_release(darktable.image_cache, cimg);
 
         char filename[PATH_MAX] = { 0 };
         gboolean from_cache = TRUE;
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] getting image from cache...\n");
         dt_image_full_path(buffered_image.id, filename, sizeof(filename), &from_cache);
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] filename from cache: %s...\n", filename);
 
         buf->imgid = imgid;
         buf->size = mip;
@@ -788,12 +794,16 @@ void dt_mipmap_cache_get_with_caller(
         buf->width = buf->height = 0;
         buf->iscale = 0.0f;
         buf->color_space = DT_COLORSPACE_NONE; // TODO: does the full buffer need to know this?
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] openin image from %d...\n", filename);
         dt_imageio_retval_t ret = dt_imageio_open(&buffered_image, filename, buf); // TODO: color_space?
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] we live after opening image...\n");
         // might have been reallocated:
         ASAN_UNPOISON_MEMORY_REGION(entry->data, dt_mipmap_buffer_dsc_size);
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] unpoisoned mem region...\n");
         dsc = (struct dt_mipmap_buffer_dsc *)buf->cache_entry->data;
         if(ret != DT_IMAGEIO_OK)
         {
+          dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] imageio_open was NOT successful...\n");
           // fprintf(stderr, "[mipmap read get] error loading image: %d\n", ret);
           //
           // we can only return a zero dimension buffer if the buffer has been allocated.
@@ -808,29 +818,38 @@ void dt_mipmap_cache_get_with_caller(
         }
         else
         {
+          dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] imageio_open was successful...\n");
           // swap back new image data:
           dt_image_t *img = dt_image_cache_get(darktable.image_cache, imgid, 'w');
+          dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] got cache for write...\n");
           *img = buffered_image;
           // fprintf(stderr, "[mipmap read get] initializing full buffer img %u with %u %u -> %d %d (%p)\n",
           // imgid, data[0], data[1], img->width, img->height, data);
           // don't write xmp for this (we only changed db stuff):
           dt_image_cache_write_release(darktable.image_cache, img, DT_IMAGE_CACHE_RELAXED);
+          dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] cache released...\n");
         }
       }
       else if(mip == DT_MIPMAP_F)
       {
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] mipmap_f unpoisoning and init_f...\n");
         ASAN_UNPOISON_MEMORY_REGION(dsc + 1, dsc->size - sizeof(struct dt_mipmap_buffer_dsc));
         _init_f(buf, (float *)(dsc + 1), &dsc->width, &dsc->height, &dsc->iscale, imgid);
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] mipmap_f unpoisoning and init_f done.\n");
       }
       else
       {
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] 8-bit thumbs unpoisoning and init_f...\n");
         // 8-bit thumbs
         ASAN_UNPOISON_MEMORY_REGION(dsc + 1, dsc->size - sizeof(struct dt_mipmap_buffer_dsc));
         _init_8((uint8_t *)(dsc + 1), &dsc->width, &dsc->height, &dsc->iscale, &buf->color_space, imgid, mip);
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] 8-bit thumbs unpoisoning and init_f done.\n");
       }
       dsc->color_space = buf->color_space;
       dsc->flags &= ~DT_MIPMAP_BUFFER_DSC_FLAG_GENERATE;
     }
+
+    dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] post dsc_flag_generate...\n");
 
     // image cache is leaving the write lock in place in case the image has been newly allocated.
     // this leads to a slight increase in thread contention, so we opt for dropping the write lock
@@ -839,10 +858,13 @@ void dt_mipmap_cache_get_with_caller(
     // note that concurrencykit has rw locks that can be demoted from w->r without losing the lock in between.
     if(mode == 'r')
     {
+      dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] mode == r...\n");
       entry->_lock_demoting = 1;
       // drop the write lock
+      dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] dropping write lock...\n");
       dt_cache_release(&_get_cache(cache, mip)->cache, entry);
       // get a read lock
+      dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] getting read lock...\n");
       buf->cache_entry = entry = dt_cache_get(&_get_cache(cache, mip)->cache, key, mode);
       ASAN_UNPOISON_MEMORY_REGION(entry->data, dt_mipmap_buffer_dsc_size);
       entry->_lock_demoting = 0;
@@ -863,6 +885,7 @@ void dt_mipmap_cache_get_with_caller(
 
     if(mipmap_generated)
     {
+      dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] raising mipmap updated signal...\n");
       /* raise signal that mipmaps has been flushed to cache */
       g_idle_add(_raise_signal_mipmap_updated, GINT_TO_POINTER(imgid));
     }
