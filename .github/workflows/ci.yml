@@ -334,7 +334,7 @@ jobs:
           - { compiler: LLVM, CC: clang, CXX: clang++ }
         target:
           #- skiptest
-          - nofeatures
+          - asan
         #include:
           # Uncomment if PR needs to generate windows package for testing.
           #- btype: Release

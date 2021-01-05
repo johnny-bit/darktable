@@ -149,6 +149,14 @@ case "$TARGET" in
       $ECO "$SRC_DIR" || (cat "$BUILD_DIR"/CMakeFiles/CMakeOutput.log; cat "$BUILD_DIR"/CMakeFiles/CMakeError.log)
     target_notest
     ;;
+    "asan")
+    CFLAGS=\"-fsanitize=address -fno-omit-frame-pointer\" CXXFLAGS=\"-fsanitize=address -fno-omit-frame-pointer\" LDFLAGS=\"-fsanitize=address\" \
+      cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
+      -G"$GENERATOR" \
+      -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE" \
+      $ECO "$SRC_DIR" || (cat "$BUILD_DIR"/CMakeFiles/CMakeOutput.log; cat "$BUILD_DIR"/CMakeFiles/CMakeError.log)
+    target_notest
+    ;;
   *)
     exit 1
     ;;
