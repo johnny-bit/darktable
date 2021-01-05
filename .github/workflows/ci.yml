@@ -403,17 +403,17 @@ jobs:
             mingw-w64-x86_64-libexif
             mingw-w64-x86_64-osm-gps-map
             mingw-w64-x86_64-libgphoto2
+            mingw-w64-x86_64-drmingw
+            mingw-w64-x86_64-gettext
+            mingw-w64-x86_64-python3
+            mingw-w64-x86_64-iso-codes
+            mingw-w64-x86_64-python3-jsonschema
+            mingw-w64-x86_64-python3-setuptools
+            mingw-w64-x86_64-gmic
           update: true
       - name: Pacman workaround
         run: |
             pacman --noconfirm -S --needed \
-            mingw-w64-x86_64-drmingw \
-            mingw-w64-x86_64-gettext \
-            mingw-w64-x86_64-python3 \
-            mingw-w64-x86_64-iso-codes \
-            mingw-w64-x86_64-python3-jsonschema \
-            mingw-w64-x86_64-python3-setuptools \
-            mingw-w64-x86_64-gmic \
             mingw-w64-x86_64-nsis;
       - uses: actions/checkout@v2
         with:

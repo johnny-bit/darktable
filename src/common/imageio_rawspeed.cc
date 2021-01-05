@@ -241,9 +241,12 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
 
     dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] resetting pointers...\n");
     /* free auto pointers on spot */
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] d.reset\n");
     d.reset();
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] m.reset\n");
     m.reset();
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] grabbing wb...\n");
     // Grab the WB
     for(int i = 0; i < 4; i++) img->wb_coeffs[i] = r->metadata.wbCoeffs[i];
 
