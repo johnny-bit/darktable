@@ -330,7 +330,7 @@ jobs:
         btype:
           - RelWithDebInfo
         compiler:
-          - { compiler: GNU,  CC: gcc,   CXX: g++ }
+          #- { compiler: GNU,  CC: gcc,   CXX: g++ }
           - { compiler: LLVM, CC: clang, CXX: clang++ }
         target:
           #- skiptest
@@ -341,9 +341,10 @@ jobs:
           #  compiler: { compiler: LLVM,  CC: clang,   CXX: clang++ }
           #  eco: -DBINARY_PACKAGE_BUILD=ON
           #  target: skiptest
-          - btype: Debug
-            compiler: { compiler: GNU,  CC: gcc,   CXX: g++ }
-            target: skiptest
+
+          #- btype: Debug
+          #  compiler: { compiler: GNU,  CC: gcc,   CXX: g++ }
+          #  target: skiptest
         generator:
           - MSYS Makefiles
           #- Ninja
@@ -424,11 +425,38 @@ jobs:
           cmake -E make_directory "${BUILD_DIR}"
           cmake -E make_directory "${INSTALL_PREFIX}"
           $(cygpath ${SRC_DIR})/.ci/ci-script.sh
+      - name: Generate report for Roman
+        run: |
+          cd /D/a/darktable/darktable/build/bin && /D/a/_temp/msys/msys64/mingw64/bin/clang++.exe \
+            -DGDK_DISABLE_DEPRECATED -DGDK_VERSION_MIN_REQUIRED=GDK_VERSION_3_22 -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_MIN_REQUIRED \
+            -DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_40 -DGTK_DISABLE_DEPRECATED -DGTK_DISABLE_SINGLE_INCLUDES -DHAVE_BUILTIN_CPU_SUPPORTS \
+            -DHAVE_CONFIG_H -DHAVE_HTTP_SERVER -DHAVE_ICU -DHAVE_ISO_CODES -DHAVE_MAP -DHAVE_OSMGPSMAP_110_OR_NEWER -DHAVE_SQLITE_324_OR_NEWER \
+            -DSQLITE_CORE -DSQLITE_ENABLE_ICU -D_POSIX_THREAD_SAFE_FUNCTIONS -D__GDK_KEYSYMS_COMPAT_H__ -D__USE_MINGW_ANSI_STDIO=1 \
+            -Dlib_darktable_EXPORTS -I/D/a/darktable/darktable/build/bin -I/D/a/darktable/darktable/src/src \
+            -I/D/a/darktable/darktable/build/lib/darktable/rawspeed/src -I/D/a/darktable/darktable/src/src/external/rawspeed/src/librawspeed \
+            -I/D/a/darktable/darktable/src/src/external/whereami/src -isystem /D/a/darktable/darktable/src/src/external \
+            -isystem /D/a/darktable/darktable/src/src/external/OpenCL -isystem /D/a/darktable/darktable/src/src/external/rawspeed/src/external \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/glib-2.0 -isystem /D/a/_temp/msys/msys64/mingw64/lib/glib-2.0/include \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/gtk-3.0 -isystem /D/a/_temp/msys/msys64/mingw64/include/pango-1.0 \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/harfbuzz -isystem /D/a/_temp/msys/msys64/mingw64/include/freetype2 \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/libpng16 -isystem /D/a/_temp/msys/msys64/mingw64/include/fribidi \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/cairo -isystem /D/a/_temp/msys/msys64/mingw64/include/lzo \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/pixman-1 -isystem /D/a/_temp/msys/msys64/mingw64/include/gdk-pixbuf-2.0 \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/atk-1.0 -isystem /D/a/_temp/msys/msys64/mingw64/include/libxml2 \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/libsoup-2.4 -isystem /D/a/_temp/msys/msys64/mingw64/include/librsvg-2.0 \
+            -isystem /D/a/_temp/msys/msys64/mingw64/include/json-glib-1.0 -isystem /D/a/_temp/msys/msys64/mingw64/include/osmgpsmap-1.0 \
+            -Wall -Wno-format -Wshadow -Wtype-limits -Wvla -Wthread-safety -Wno-unknown-pragmas -Wno-error=varargs -Wno-error=address-of-packed-member \
+            -std=c++14 -std=c++11 -march=native -msse2 -g -O2 -g -DNDEBUG -O2   -DUNICODE -D_UNICODE -Werror -Wfatal-errors -Wno-error=pass-failed \
+            -S -emit-llvm -o $(cygpath ${SRC_DIR})/.ci/imageio_rawspeed.ll -Xclang -disable-llvm-optzns
+            -std=c++14 -c /D/a/darktable/darktable/src/src/common/imageio_rawspeed.cc
+      - name: Upload raport
+        uses: 'actions/upload-artifact@v2'
+        with:
+          name: emit-llvm.imageio_rawspeed.Win64.${{ matrix.compiler.compiler }}.${{ matrix.btype}}.${{ github.sha }}
+          path: ${{ env.SRC_DIR }}/.ci/*.ll
+          retention-days: 1
       - name: Check if it runs
         run: |
-          df -h
-          rm -rf "${BUILD_DIR}"
-          df -h
           $(cygpath ${INSTALL_PREFIX})/bin/darktable.exe --version || true
           $(cygpath ${INSTALL_PREFIX})/bin/darktable-cli.exe --version || true
           echo "Testing RUN!"
