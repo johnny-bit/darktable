@@ -113,37 +113,54 @@ uint32_t dt_rawspeed_crop_dcraw_filters(uint32_t filters, uint32_t crop_x, uint3
 dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filename,
                                              dt_mipmap_buffer_t *mbuf)
 {
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] helo!\n");
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] reading exif!\n");
   if(!img->exif_inited) (void)dt_exif_read(img, filename);
 
   char filen[PATH_MAX] = { 0 };
   snprintf(filen, sizeof(filen), "%s", filename);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] creating file reader...\n");
   FileReader f(filen);
 
   std::unique_ptr<RawDecoder> d;
   std::unique_ptr<const Buffer> m;
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] trying to process data...\n");
   try
   {
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] loading meta...\n");
     dt_rawspeed_load_meta();
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] loaded meta\n");
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] reading file in lock...\n");
     dt_pthread_mutex_lock(&darktable.readFile_mutex);
     m = f.readFile();
     dt_pthread_mutex_unlock(&darktable.readFile_mutex);
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] read file in lock\n");
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] getting parser and decoder...\n");
     RawParser t(m.get());
     d = t.getDecoder(meta);
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] got parser and decored\n");
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] checking if everything is good so far...\n");
     if(!d.get()) return DT_IMAGEIO_FILE_CORRUPTED;
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] so far so good...\n");
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] checking support...\n");
     d->failOnUnknown = true;
     d->checkSupport(meta);
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] decoding raw...\n");
     d->decodeRaw();
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] decoding metadata...\n");
     d->decodeMetaData(meta);
     RawImage r = d->mRaw;
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] gathering errors...\n");
     const auto errors = r->getErrors();
     for(const auto &error : errors) fprintf(stderr, "[rawspeed] (%s) %s\n", img->filename, error.c_str());
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] refreshing maker/model...\n");
     g_strlcpy(img->camera_maker, r->metadata.canonical_make.c_str(), sizeof(img->camera_maker));
     g_strlcpy(img->camera_model, r->metadata.canonical_model.c_str(), sizeof(img->camera_model));
     g_strlcpy(img->camera_alias, r->metadata.canonical_alias.c_str(), sizeof(img->camera_alias));
@@ -194,6 +211,8 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
     img->raw_black_level = r->blackLevel;
     img->raw_white_point = r->whitePoint;
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] calculating black areas...\n");
+
     if(r->blackLevelSeparate[0] == -1 || r->blackLevelSeparate[1] == -1 || r->blackLevelSeparate[2] == -1
        || r->blackLevelSeparate[3] == -1)
     {
@@ -220,6 +239,7 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
      *   ???
      */
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] resetting pointers...\n");
     /* free auto pointers on spot */
     d.reset();
     m.reset();
@@ -227,9 +247,12 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
     // Grab the WB
     for(int i = 0; i < 4; i++) img->wb_coeffs[i] = r->metadata.wbCoeffs[i];
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] checking user crop...\n");
     // Get DefaultUserCrop
     if (img->flags & DT_IMAGE_HAS_USERCROP)
       dt_exif_img_check_usercrop(img, filename);
+
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] checking for datatype float32...\n");
 
     if(r->getDataType() == TYPE_FLOAT32)
     {
@@ -243,9 +266,12 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
     img->buf_dsc.filters = 0u;
     if(!r->isCFA)
     {
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] loading file as sraw...\n");
       dt_imageio_retval_t ret = dt_imageio_open_rawspeed_sraw(img, r, mbuf);
       return ret;
     }
+
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] checking for silly data combinations...\n");
 
     if((r->getDataType() != TYPE_USHORT16) && (r->getDataType() != TYPE_FLOAT32)) return DT_IMAGEIO_FILE_CORRUPTED;
 
@@ -255,11 +281,13 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
 
     if((r->getDataType() == TYPE_FLOAT32) && (r->getBpp() != sizeof(float))) return DT_IMAGEIO_FILE_CORRUPTED;
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] getting cpp...\n");
     const float cpp = r->getCpp();
     if(cpp != 1) return DT_IMAGEIO_FILE_CORRUPTED;
 
     img->buf_dsc.channels = 1;
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] getting bpp...\n");
     switch(r->getBpp())
     {
       case sizeof(uint16_t):
@@ -271,6 +299,8 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
       default:
         return DT_IMAGEIO_FILE_CORRUPTED;
     }
+
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] getting uncropped dimensions and offsets...\n");
 
     // dimensions of uncropped image
     iPoint2D dimUncropped = r->getUncroppedDim();
@@ -293,6 +323,7 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
     img->fuji_rotation_pos = r->metadata.fujiRotationPos;
     img->pixel_aspect_ratio = (float)r->metadata.pixelAspectRatio;
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] checking for dcraw filters...\n");
     // as the X-Trans filters comments later on states, these are for
     // cropped image, so we need to uncrop them.
     img->buf_dsc.filters = dt_rawspeed_crop_dcraw_filters(r->cfa.getDcrawFilter(), cropTL.x, cropTL.y);
@@ -304,9 +335,12 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
       img->flags &= ~DT_IMAGE_LDR;
       img->flags |= DT_IMAGE_RAW;
 
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] we have filters...\n");
+
       // special handling for x-trans sensors
       if(img->buf_dsc.filters == 9u)
       {
+        dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] 6x6 cfa...\n");
         // get 6x6 CFA offset from top left of cropped image
         // NOTE: This is different from how things are done with Bayer
         // sensors. For these, the CFA in cameras.xml is pre-offset
@@ -320,12 +354,15 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
           }
       }
     }
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] check if mbuff is not null...\n");
     // if buf is NULL, we quit the fct here
     if(!mbuf) return DT_IMAGEIO_OK;
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] allocate mipmap cache...\n");
     void *buf = dt_mipmap_cache_alloc(mbuf, img);
     if(!buf) return DT_IMAGEIO_CACHE_FULL;
 
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] copying data...\n");
     /*
      * since we do not want to crop black borders at this stage,
      * and we do not want to rotate image, we can just use memcpy,
@@ -338,16 +375,21 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
     const size_t bufSize_rawspeed = (size_t)r->pitch * dimUncropped.y;
     if(bufSize_mipmap == bufSize_rawspeed)
     {
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] copying data via memcpy...\n");
       memcpy(buf, r->getDataUncropped(0, 0), bufSize_mipmap);
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] copy success\n");
     }
     else
     {
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] copying data via flip buffers...\n");
       dt_imageio_flip_buffers((char *)buf, (char *)r->getDataUncropped(0, 0), r->getBpp(), dimUncropped.x,
                               dimUncropped.y, dimUncropped.x, dimUncropped.y, r->pitch, ORIENTATION_NONE);
+      dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] flip success\n");
     }
   }
   catch(const std::exception &exc)
   {
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] exception: (%s) %s\n", img->filename, exc.what());
     printf("[rawspeed] (%s) %s\n", img->filename, exc.what());
 
     /* if an exception is raised lets not retry or handle the
@@ -356,6 +398,7 @@ dt_imageio_retval_t dt_imageio_open_rawspeed(dt_image_t *img, const char *filena
   }
   catch(...)
   {
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open_rawspeed] Unhandled exception in imageio_rawspeed!\n");
     printf("Unhandled exception in imageio_rawspeed\n");
     return DT_IMAGEIO_FILE_CORRUPTED;
   }
