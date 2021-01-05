@@ -335,13 +335,12 @@ jobs:
         target:
           #- skiptest
           - nofeatures
-        include:
+        #include:
           # Uncomment if PR needs to generate windows package for testing.
           #- btype: Release
           #  compiler: { compiler: LLVM,  CC: clang,   CXX: clang++ }
           #  eco: -DBINARY_PACKAGE_BUILD=ON
           #  target: skiptest
-
           #- btype: Debug
           #  compiler: { compiler: GNU,  CC: gcc,   CXX: g++ }
           #  target: skiptest
