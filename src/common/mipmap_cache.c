@@ -794,7 +794,7 @@ void dt_mipmap_cache_get_with_caller(
         buf->width = buf->height = 0;
         buf->iscale = 0.0f;
         buf->color_space = DT_COLORSPACE_NONE; // TODO: does the full buffer need to know this?
-        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] openin image from %d...\n", filename);
+        dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] openin image from %s...\n", filename);
         dt_imageio_retval_t ret = dt_imageio_open(&buffered_image, filename, buf); // TODO: color_space?
         dt_print(DT_DEBUG_CACHE, "[dt_mipmap_cache_get_with_caller] we live after opening image...\n");
         // might have been reallocated:

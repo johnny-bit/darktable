@@ -1184,20 +1184,34 @@ dt_imageio_retval_t dt_imageio_open(dt_image_t *img,               // non-const 
                                     const char *filename,          // full path
                                     dt_mipmap_buffer_t *buf)
 {
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] helo...\n");
   /* first of all, check if file exists, don't bother to test loading if not exists */
   if(!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) return !DT_IMAGEIO_OK;
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] file exists, processing...\n");
   const int32_t was_hdr = (img->flags & DT_IMAGE_HDR);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] checking monochrome flag...\n");
   const int32_t was_bw = dt_image_monochrome_flags(img);
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] monochrome flag is:%d...\n", was_bw);
 
   dt_imageio_retval_t ret = DT_IMAGEIO_FILE_CORRUPTED;
   img->loader = LOADER_UNKNOWN;
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] starting opening procedure with ret=%d...\n", ret);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] checking LDR...\n");
   /* check if file is ldr using magic's */
   if(dt_imageio_is_ldr(filename)) ret = dt_imageio_open_ldr(img, filename, buf);
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] ldr opening set ret=%d...\n", ret);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] checking HDR...\n");
   /* silly check using file extensions: */
   if(ret != DT_IMAGEIO_OK && ret != DT_IMAGEIO_CACHE_FULL && dt_imageio_is_hdr(filename))
     ret = dt_imageio_open_hdr(img, filename, buf);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] hdr opening set ret=%d...\n", ret);
+
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] checking rawspeed...\n");
 
   /* use rawspeed to load the raw */
   if(ret != DT_IMAGEIO_OK && ret != DT_IMAGEIO_CACHE_FULL)
@@ -1209,16 +1223,25 @@ dt_imageio_retval_t dt_imageio_open(dt_image_t *img,               // non-const 
       img->loader = LOADER_RAWSPEED;
     }
   }
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] rawspeed opening set ret=%d...\n", ret);
 
   /* fallback that tries to open file via GraphicsMagick */
   if(ret != DT_IMAGEIO_OK && ret != DT_IMAGEIO_CACHE_FULL)
     ret = dt_imageio_open_exotic(img, filename, buf);
 
+  dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] exotic opening set ret=%d...\n", ret);
+
   if((ret == DT_IMAGEIO_OK) && !was_hdr && (img->flags & DT_IMAGE_HDR))
+  {
     dt_imageio_set_hdr_tag(img);
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] HDR tag set...\n");
+  }
 
   if((ret == DT_IMAGEIO_OK) && (was_bw != dt_image_monochrome_flags(img)))
+  {
     dt_imageio_update_monochrome_workflow_tag(img->id, dt_image_monochrome_flags(img));
+    dt_print(DT_DEBUG_IMAGEIO, "[dt_imageio_open] monochrome tag set...\n");
+  }
 
   img->p_width = img->width - img->crop_x - img->crop_width;
   img->p_height = img->height - img->crop_y - img->crop_height;

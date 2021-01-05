@@ -384,18 +384,18 @@ jobs:
             mingw-w64-x86_64-pugixml
             mingw-w64-x86_64-libjpeg-turbo
             mingw-w64-x86_64-zlib
+            mingw-w64-x86_64-exiv2
+            mingw-w64-x86_64-lcms2
+            mingw-w64-x86_64-lensfun
+            mingw-w64-x86_64-dbus-glib
+            mingw-w64-x86_64-openexr
+            mingw-w64-x86_64-sqlite3
+            mingw-w64-x86_64-libxslt
+            mingw-w64-x86_64-libsoup
           update: true
       - name: Pacman workaround
         run: |
             pacman --noconfirm -S --needed \
-            mingw-w64-x86_64-exiv2 \
-            mingw-w64-x86_64-lcms2 \
-            mingw-w64-x86_64-lensfun \
-            mingw-w64-x86_64-dbus-glib \
-            mingw-w64-x86_64-openexr \
-            mingw-w64-x86_64-sqlite3 \
-            mingw-w64-x86_64-libxslt \
-            mingw-w64-x86_64-libsoup \
             mingw-w64-x86_64-libavif \
             mingw-w64-x86_64-libwebp \
             mingw-w64-x86_64-libsecret \
