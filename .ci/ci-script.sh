@@ -150,7 +150,9 @@ case "$TARGET" in
     target_notest
     ;;
     "asan")
-    CFLAGS=\"-fsanitize=address -fno-omit-frame-pointer\" CXXFLAGS=\"-fsanitize=address -fno-omit-frame-pointer\" LDFLAGS=\"-fsanitize=address\" \
+      export CFLAGS="-fsanitize=address -fno-omit-frame-pointer"
+      export CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer"
+      export LDFLAGS="-fsanitize=address"
       cmake -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
       -G"$GENERATOR" \
       -DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE" \
