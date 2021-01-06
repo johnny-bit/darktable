@@ -414,6 +414,7 @@ jobs:
       - name: Pacman workaround
         run: |
             pacman --noconfirm -S --needed \
+            mingw-w64-x86_64-compiler-rt \
             mingw-w64-x86_64-nsis;
       - uses: actions/checkout@v2
         with:
